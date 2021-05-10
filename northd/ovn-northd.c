@@ -4931,7 +4931,52 @@ build_pre_acl_flows(struct ovn_datapath *od, struct ovn_port *op,
 }
 
 static void
-build_pre_acls(struct ovn_datapath *od, struct hmap *lflows)
+build_stateless_filter(struct ovn_datapath *od,
+                       const struct nbrec_acl *acl,
+                       struct hmap *lflows)
+{
+    if (!strcmp(acl->direction, "from-lport")) {
+        ovn_lflow_add_with_hint(lflows, od, S_SWITCH_IN_PRE_ACL,
+                                acl->priority + OVN_ACL_PRI_OFFSET,
+                                acl->match,
+                                "next;",
+                                &acl->header_);
+    } else {
+        ovn_lflow_add_with_hint(lflows, od, S_SWITCH_OUT_PRE_ACL,
+                                acl->priority + OVN_ACL_PRI_OFFSET,
+                                acl->match,
+                                "next;",
+                                &acl->header_);
+    }
+}
+
+static void
+build_stateless_filters(struct ovn_datapath *od, struct hmap *port_groups,
+                        struct hmap *lflows)
+{
+    for (size_t i = 0; i < od->nbs->n_acls; i++) {
+        const struct nbrec_acl *acl = od->nbs->acls[i];
+        if (!strcmp(acl->action, "allow-stateless")) {
+            build_stateless_filter(od, acl, lflows);
+        }
+    }
+
+    struct ovn_port_group *pg;
+    HMAP_FOR_EACH (pg, key_node, port_groups) {
+        if (ovn_port_group_ls_find(pg, &od->nbs->header_.uuid)) {
+            for (size_t i = 0; i < pg->nb_pg->n_acls; i++) {
+                const struct nbrec_acl *acl = pg->nb_pg->acls[i];
+                if (!strcmp(acl->action, "allow-stateless")) {
+                    build_stateless_filter(od, acl, lflows);
+                }
+            }
+        }
+    }
+}
+
+static void
+build_pre_acls(struct ovn_datapath *od, struct hmap *port_groups,
+               struct hmap *lflows)
 {
     bool has_stateful = has_stateful_acl(od);
 
@@ -4950,9 +4995,9 @@ build_pre_acls(struct ovn_datapath *od, struct hmap *lflows)
                   "next;");
     free(svc_check_match);
 
-    /* If there are any stateful ACL rules in this datapath, we must
-     * send all IP packets through the conntrack action, which handles
-     * defragmentation, in order to match L4 headers. */
+    /* If there are any stateful ACL rules in this datapath, we may
+     * send IP packets for some (allow) filters through the conntrack action,
+     * which handles defragmentation, in order to match L4 headers. */
     if (has_stateful) {
         for (size_t i = 0; i < od->n_router_ports; i++) {
             build_pre_acl_flows(od, od->router_ports[i], lflows);
@@ -4960,6 +5005,8 @@ build_pre_acls(struct ovn_datapath *od, struct hmap *lflows)
         for (size_t i = 0; i < od->n_localnet_ports; i++) {
             build_pre_acl_flows(od, od->localnet_ports[i], lflows);
         }
+
+        build_stateless_filters(od, port_groups, lflows);
 
         /* Ingress and Egress Pre-ACL Table (Priority 110).
          *
@@ -5199,7 +5246,8 @@ build_acl_log(struct ds *actions, const struct nbrec_acl *acl)
     } else if (!strcmp(acl->action, "reject")) {
         ds_put_cstr(actions, "verdict=reject, ");
     } else if (!strcmp(acl->action, "allow")
-        || !strcmp(acl->action, "allow-related")) {
+        || !strcmp(acl->action, "allow-related")
+        || !strcmp(acl->action, "allow-stateless")) {
         ds_put_cstr(actions, "verdict=allow, ");
     }
 
@@ -5301,7 +5349,16 @@ consider_acl(struct hmap *lflows, struct ovn_datapath *od,
     bool ingress = !strcmp(acl->direction, "from-lport") ? true :false;
     enum ovn_stage stage = ingress ? S_SWITCH_IN_ACL : S_SWITCH_OUT_ACL;
 
-    if (!strcmp(acl->action, "allow")
+    if (!strcmp(acl->action, "allow-stateless")) {
+        struct ds actions = DS_EMPTY_INITIALIZER;
+        build_acl_log(&actions, acl);
+        ds_put_cstr(&actions, "next;");
+        ovn_lflow_add_with_hint(lflows, od, stage,
+                                acl->priority + OVN_ACL_PRI_OFFSET,
+                                acl->match, ds_cstr(&actions),
+                                &acl->header_);
+        ds_destroy(&actions);
+    } else if (!strcmp(acl->action, "allow")
         || !strcmp(acl->action, "allow-related")) {
         /* If there are any stateful flows, we must even commit "allow"
          * actions.  This is because, while the initiater's
@@ -6646,7 +6703,7 @@ build_lswitch_flows(struct hmap *datapaths, struct hmap *ports,
             continue;
         }
 
-        build_pre_acls(od, lflows);
+        build_pre_acls(od, port_groups, lflows);
         build_pre_lb(od, lflows, meter_groups, lbs);
         build_pre_stateful(od, lflows);
         build_acls(od, lflows, port_groups);

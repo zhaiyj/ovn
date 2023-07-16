@@ -5412,7 +5412,9 @@ consider_acl(struct hmap *lflows, struct ovn_datapath *od,
             ds_clear(&match);
             ds_clear(&actions);
             ds_put_format(&match,
-                          "(!ct.trk || (!ct.new && ct.est && !ct.rpl"
+                          "(!ct.trk || (!ct.new && !ct.rpl && ct.inv"
+                          " && ct_label.blocked == 0)"
+                          " || (!ct.new && ct.est && !ct.rpl"
                           " && ct_label.blocked == 0)) && (%s)",
                           acl->match);
 

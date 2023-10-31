@@ -4932,23 +4932,23 @@ build_pre_acl_flows(struct ovn_datapath *od, struct ovn_port *op,
 
 static void
 build_stateless_filter_drop(struct ovn_datapath *od,
-										   const struct nbrec_acl *acl,
-										   struct hmap *lflows)
+                                        const struct nbrec_acl *acl,
+                                        struct hmap *lflows)
 {
 
-	if (!strcmp(acl->direction, "from-lport")) {
-		ovn_lflow_add_with_hint(lflows, od, S_SWITCH_IN_PRE_ACL,
-								acl->priority + OVN_ACL_PRI_OFFSET,
-								acl->match,
-								"drop;",
-								&acl->header_);
-	} else {
-			ovn_lflow_add_with_hint(lflows, od, S_SWITCH_OUT_PRE_ACL,
-									acl->priority + OVN_ACL_PRI_OFFSET,
-									acl->match,
-									"drop;",
-									&acl->header_);
-	}
+   if (!strcmp(acl->direction, "from-lport")) {
+       ovn_lflow_add_with_hint(lflows, od, S_SWITCH_IN_PRE_ACL,
+                               acl->priority + OVN_ACL_PRI_OFFSET,
+                               acl->match,
+                               "drop;",
+                               &acl->header_);
+   } else {
+       ovn_lflow_add_with_hint(lflows, od, S_SWITCH_OUT_PRE_ACL,
+                               acl->priority + OVN_ACL_PRI_OFFSET,
+                               acl->match,
+                                "drop;",
+                               &acl->header_);
+   }
 
 }
 
@@ -4983,7 +4983,7 @@ build_stateless_filters(struct ovn_datapath *od, struct hmap *port_groups,
             build_stateless_filter(od, acl, lflows);
         }else if (!strcmp(acl->action, "drop-stateless")) {
 			build_stateless_filter_drop(od, acl, lflows);
-		}
+        }
     }
 
     struct ovn_port_group *pg;
@@ -4995,7 +4995,7 @@ build_stateless_filters(struct ovn_datapath *od, struct hmap *port_groups,
                     build_stateless_filter(od, acl, lflows);
                 }else if (!strcmp(acl->action, "drop-stateless")) {
 					build_stateless_filter_drop(od, acl, lflows);
-				}
+                }
             }
         }
     }

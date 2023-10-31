@@ -4932,8 +4932,8 @@ build_pre_acl_flows(struct ovn_datapath *od, struct ovn_port *op,
 
 static void
 build_stateless_filter_drop(struct ovn_datapath *od,
-                                        const struct nbrec_acl *acl,
-                                        struct hmap *lflows)
+                            const struct nbrec_acl *acl,
+                            struct hmap *lflows)
 {
 
    if (!strcmp(acl->direction, "from-lport")) {

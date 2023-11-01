@@ -4932,8 +4932,8 @@ build_pre_acl_flows(struct ovn_datapath *od, struct ovn_port *op,
 
 static void
 build_stateless_filter_drop(struct ovn_datapath *od,
-                            const struct nbrec_acl *acl,
-                            struct hmap *lflows)
+                                        const struct nbrec_acl *acl,
+                                        struct hmap *lflows)
 {
 
    if (!strcmp(acl->direction, "from-lport")) {
@@ -5465,7 +5465,7 @@ consider_acl(struct hmap *lflows, struct ovn_datapath *od,
          * use for this datapath.  In that case, the actions differ
          * depending on whether the connection was previously committed
          * to the connection tracker with ct_commit. */
-        if (has_stateful) {
+       // if (has_stateful) {
             /* If the packet is not tracked or not part of an established
              * connection, then we can simply reject/drop it. */
             ds_put_cstr(&match,
@@ -5510,7 +5510,7 @@ consider_acl(struct hmap *lflows, struct ovn_datapath *od,
                                         ds_cstr(&match), ds_cstr(&actions),
                                         &acl->header_);
             }
-        }//else {
+        //}else {
             /* There are no stateful ACLs in use on this datapath,
              * so a "reject/drop" ACL is simply the "reject/drop"
              * logical flow action in all cases. */

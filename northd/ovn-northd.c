@@ -5514,7 +5514,7 @@ consider_acl(struct hmap *lflows, struct ovn_datapath *od,
             /* There are no stateful ACLs in use on this datapath,
              * so a "reject/drop" ACL is simply the "reject/drop"
              * logical flow action in all cases. */
-           //f (!strcmp(acl->action, "reject")) {
+           //if (!strcmp(acl->action, "reject")) {
            //   build_reject_acl_rules(od, lflows, stage, acl, &match,
            //                          &actions, &acl->header_);
           //} else {
@@ -5525,7 +5525,7 @@ consider_acl(struct hmap *lflows, struct ovn_datapath *od,
           //                            acl->match, ds_cstr(&actions),
           //                            &acl->header_);
           //}
-        }
+       // }
         ds_destroy(&match);
         ds_destroy(&actions);
     }

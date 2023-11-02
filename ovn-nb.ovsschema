@@ -216,7 +216,7 @@
                                             "enum": ["set",
                                                ["allow", "allow-related",
                                                 "allow-stateless", "drop",
-                                                "reject"]]}}},
+                                                "reject", "drop-stateless"]]}}},
                 "log": {"type": "boolean"},
                 "severity": {"type": {"key": {"type": "string",
                                               "enum": ["set",

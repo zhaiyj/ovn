@@ -5005,7 +5005,7 @@ static void
 build_pre_acls(struct ovn_datapath *od, struct hmap *port_groups,
                struct hmap *lflows)
 {
-   // bool has_stateful = has_stateful_acl(od);
+    bool has_stateful = has_stateful_acl(od);
 
     /* Ingress and Egress Pre-ACL Table (Priority 0): Packets are
      * allowed by default. */
@@ -5025,15 +5025,18 @@ build_pre_acls(struct ovn_datapath *od, struct hmap *port_groups,
     /* If there are any stateful ACL rules in this datapath, we may
      * send IP packets for some (allow) filters through the conntrack action,
      * which handles defragmentation, in order to match L4 headers. */
-    //if (has_stateful) {
-        for (size_t i = 0; i < od->n_router_ports; i++) {
-            build_pre_acl_flows(od, od->router_ports[i], lflows);
-        }
-        for (size_t i = 0; i < od->n_localnet_ports; i++) {
-            build_pre_acl_flows(od, od->localnet_ports[i], lflows);
-        }
+	for (size_t i = 0; i < od->n_router_ports; i++) {
+		build_pre_acl_flows(od, od->router_ports[i], lflows);
+	}
+	for (size_t i = 0; i < od->n_localnet_ports; i++) {
+		build_pre_acl_flows(od, od->localnet_ports[i], lflows);
+	}
+		
+	build_stateless_filters(od, port_groups, lflows);
 
-        build_stateless_filters(od, port_groups, lflows);
+	
+    if (has_stateful) {
+      
 
         /* Ingress and Egress Pre-ACL Table (Priority 110).
          *
@@ -5058,7 +5061,7 @@ build_pre_acls(struct ovn_datapath *od, struct hmap *port_groups,
                       REGBIT_CONNTRACK_DEFRAG" = 1; next;");
         ovn_lflow_add(lflows, od, S_SWITCH_OUT_PRE_ACL, 100, "ip",
                       REGBIT_CONNTRACK_DEFRAG" = 1; next;");
-    //}
+    }
 }
 
 /* For a 'key' of the form "IP:port" or just "IP", sets 'port' and

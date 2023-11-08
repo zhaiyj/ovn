@@ -4982,7 +4982,7 @@ build_stateless_filters(struct ovn_datapath *od, struct hmap *port_groups,
         if (!strcmp(acl->action, "allow-stateless")) {
             build_stateless_filter(od, acl, lflows);
         }else if (!strcmp(acl->action, "drop-stateless")) {
-			build_stateless_filter_drop(od, acl, lflows);
+	    build_stateless_filter_drop(od, acl, lflows);
         }
     }
 
@@ -4994,7 +4994,7 @@ build_stateless_filters(struct ovn_datapath *od, struct hmap *port_groups,
                 if (!strcmp(acl->action, "allow-stateless")) {
                     build_stateless_filter(od, acl, lflows);
                 }else if (!strcmp(acl->action, "drop-stateless")) {
-					build_stateless_filter_drop(od, acl, lflows);
+		    build_stateless_filter_drop(od, acl, lflows);
                 }
             }
         }

@@ -4957,20 +4957,25 @@ static void
 build_stateless_filter(struct ovn_datapath *od,
                        const struct nbrec_acl *acl,
                        struct hmap *lflows)
-{
+{   
+    struct ds actions = DS_EMPTY_INITIALIZER;
+    ds_put_cstr(&actions, REGBIT_CONNTRACK_DEFRAG" = 1; "); 
+    ds_put_cstr(&actions, "next;");
+
     if (!strcmp(acl->direction, "from-lport")) {
         ovn_lflow_add_with_hint(lflows, od, S_SWITCH_IN_PRE_ACL,
                                 acl->priority + OVN_ACL_PRI_OFFSET,
                                 acl->match,
-                                "next;",
+                                ds_cstr(&actions),
                                 &acl->header_);
     } else {
         ovn_lflow_add_with_hint(lflows, od, S_SWITCH_OUT_PRE_ACL,
                                 acl->priority + OVN_ACL_PRI_OFFSET,
                                 acl->match,
-                                "next;",
+                                ds_cstr(&actions),
                                 &acl->header_);
     }
+    ds_destroy(&actions);
 }
 
 static void

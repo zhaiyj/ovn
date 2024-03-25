@@ -4923,7 +4923,7 @@ build_pre_acl_flows(struct ovn_datapath *od, struct ovn_port *op,
                             ds_cstr(&match_in), "next;",
                             &op->nbsp->header_);
     ovn_lflow_add_with_hint(lflows, od, S_SWITCH_OUT_PRE_ACL, 110,
-                            ds_cstr(&match_out), "next;",
+                            ds_cstr(&match_out), "ct_clear;next;",
                             &op->nbsp->header_);
 
     ds_destroy(&match_in);
